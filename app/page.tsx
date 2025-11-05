@@ -67,7 +67,10 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-3xl font-bold mb-2">Reclaim</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <img src="/logo.svg" alt="Reclaim" className="w-10 h-10" />
+            <h1 className="text-3xl font-bold">Reclaim</h1>
+          </div>
           <p className="text-muted-foreground">Importa y visualiza tus datos de salud en tiempo real</p>
         </div>
       </header>
@@ -87,15 +90,16 @@ export default function Home() {
         ) : (
           <div className="space-y-8">
             {/* Filters and Actions */}
-            <div className="flex flex-col md:flex-row gap-4 items-end justify-between bg-card p-4 border border-border">
-              <div className="flex flex-col md:flex-row gap-4 flex-1">
+            <div className="bg-card p-4 sm:p-6 border border-border space-y-4">
+              {/* Date Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Desde</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="px-3 py-2 border border-input bg-background text-foreground"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground"
                   />
                 </div>
                 <div>
@@ -104,24 +108,26 @@ export default function Home() {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="px-3 py-2 border border-input bg-background text-foreground"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground"
                   />
                 </div>
               </div>
-              <div className="flex gap-2 w-full md:w-auto">
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   onClick={() => {
                     setStartDate("")
                     setEndDate("")
                   }}
-                  className="flex items-center gap-2 px-4 py-2 border border-border hover:bg-muted transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border hover:bg-muted transition-colors text-sm font-medium"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Limpiar filtros
                 </button>
                 <button
                   onClick={handleClearData}
-                  className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors text-sm font-medium"
                 >
                   Borrar datos
                 </button>

@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   title: "Reclaim",
   description: "Visualiza e importa datos de salud desde aplicaciones como Samsung Health",
   generator: "v0.app",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 }
 
 export default function RootLayout({
@@ -20,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
         <ClientLayout>{children}</ClientLayout>
         <Analytics />
