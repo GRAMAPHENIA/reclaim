@@ -271,13 +271,33 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
         <div 
           className={`relative border transition-all ${
             isDragging 
-              ? "border-primary bg-primary/5 shadow-lg" 
+              ? "border-primary bg-primary/10 shadow-xl ring-2 ring-primary/20" 
               : "border-border bg-card shadow-sm hover:shadow-md"
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
+          {/* Glassmorphism Overlay for Drag State */}
+          {isDragging && (
+            <div className="absolute inset-0 bg-white/70 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center z-10">
+              <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
+                <svg 
+                  className="w-10 h-10 text-primary" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" 
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
           {/* Main Input Area */}
           <div className="flex items-center gap-3 p-4">
             {/* Attachment Button */}
@@ -318,11 +338,6 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   <span>Procesando archivos...</span>
-                </div>
-              ) : isDragging ? (
-                <div className="flex items-center gap-3 text-primary">
-                  <Upload className="w-4 h-4" />
-                  <span>Suelta tus archivos aquí</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-3 text-muted-foreground">
