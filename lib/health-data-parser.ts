@@ -142,6 +142,13 @@ function extractMetric(item: any): HealthMetric | null {
   const date = parseDate(dateStr)
   if (!date) return null
 
+  // Debug: Log Samsung Health format detection
+  if (item.mStepCount !== undefined || item.mCalorie !== undefined || item.mStartTime !== undefined) {
+    console.log('Detectado formato Samsung Health con campos m-prefixed:', Object.keys(item))
+  } else if (item.heart_rate !== undefined && item.start_time !== undefined && item.elapsed_time !== undefined) {
+    console.log('Detectado formato Samsung Health de ejercicio/ritmo cardíaco:', Object.keys(item))
+  }
+
   // Get raw sleep duration and normalize it to minutes
   const rawSleepDuration = findNumericField(item, [
     "duration_minutes", 
@@ -151,17 +158,31 @@ function extractMetric(item: any): HealthMetric | null {
     "sleep_time",
     "total_sleep_time",
     "sleep_length",
-    "bedtime_duration"
+    "bedtime_duration",
+    // Samsung Health m-prefixed fields
+    "mSleepDuration", "mTotalSleepTime", "mSleepTime"
   ])
   const sleepDuration = rawSleepDuration ? normalizeSleepDuration(rawSleepDuration, item) : undefined
 
   return {
     date,
-    steps: findNumericField(item, ["steps", "step_count", "count"]),
-    heartRate: findNumericField(item, ["heart_rate", "bpm", "hr", "heartRate", "pulse", "value", "rate"]),
+    steps: findNumericField(item, [
+      "steps", "step_count", "count",
+      // Samsung Health m-prefixed fields
+      "mStepCount", "mWalkStepCount", "mRunStepCount", "mTotalStepCount"
+    ]),
+    heartRate: findNumericField(item, [
+      "heart_rate", "bpm", "hr", "heartRate", "pulse", "value", "rate",
+      // Samsung Health m-prefixed fields
+      "mHeartRate", "mBpm", "mPulse"
+    ]),
     sleepDuration,
     sleepStage: findStringField(item, ["sleep_stage", "stage"]),
-    calories: findNumericField(item, ["calories", "kcal", "energy"]),
+    calories: findNumericField(item, [
+      "calories", "kcal", "energy",
+      // Samsung Health m-prefixed fields
+      "mCalorie", "mEnergy", "mKcal"
+    ]),
   }
 }
 
@@ -184,7 +205,13 @@ function extractFromNested(obj: any, path: string[] = []): HealthMetric[] {
 }
 
 function findDateField(obj: any): string | null {
-  const dateKeys = ["date", "timestamp", "time", "create_time", "start_time", "end_time"]
+  const dateKeys = [
+    "date", "timestamp", "time", "create_time", "start_time", "end_time",
+    // Samsung Health m-prefixed fields
+    "mStartTime", "mEndTime", "mTime",
+    // Samsung Health exercise/heart rate fields
+    "elapsed_time"
+  ]
   for (const key of dateKeys) {
     if (obj[key]) return obj[key]
   }
