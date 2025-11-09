@@ -12,13 +12,20 @@ export function SleepChart({ metrics }: SleepChartProps) {
     return <div className="text-muted-foreground text-center py-8">No hay datos de sueño</div>
 
   const data = metrics
-    .filter((m) => m.sleepDuration !== undefined && m.sleepDuration > 0)
+    .filter((m) => {
+      // Filter out unrealistic values: sleep should be between 1 hour and 16 hours (60-960 minutes)
+      return m.sleepDuration !== undefined && 
+             m.sleepDuration >= 60 && 
+             m.sleepDuration <= 960 &&
+             m.sleepDuration !== 1440 // Specifically filter out 24-hour values
+    })
     .map((m) => ({
       date: m.date.toLocaleDateString("es-ES", { month: "short", day: "numeric" }),
       fullDate: m.date.toLocaleDateString("es-ES"),
-      sleep: Math.round(m.sleepDuration! / 60), // Convert minutes to hours
+      sleep: Number((m.sleepDuration! / 60).toFixed(1)), // Convert minutes to hours with 1 decimal
       sleepMinutes: m.sleepDuration,
     }))
+    .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
 
   if (data.length === 0) {
     return <div className="text-muted-foreground text-center py-8">No hay datos de sueño disponibles</div>
@@ -37,6 +44,7 @@ export function SleepChart({ metrics }: SleepChartProps) {
           <YAxis 
             stroke="var(--color-muted-foreground)"
             fontSize={12}
+            domain={[0, 16]} // Realistic sleep range: 0-16 hours
             label={{ 
               value: "Horas", 
               angle: -90, 

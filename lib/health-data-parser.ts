@@ -147,6 +147,11 @@ function extractMetric(item: any): HealthMetric | null {
     console.log('Detectado formato Samsung Health con campos m-prefixed:', Object.keys(item))
   } else if (item.heart_rate !== undefined && item.start_time !== undefined && item.elapsed_time !== undefined) {
     console.log('Detectado formato Samsung Health de ejercicio/ritmo cardíaco:', Object.keys(item))
+  } else if (item.acc !== undefined && item.rri_info !== undefined) {
+    console.log('Detectado formato Samsung Health avanzado con acelerómetro y RRI:', {
+      acc_points: Array.isArray(item.acc) ? item.acc.length : 'N/A',
+      rri_measurements: Array.isArray(item.rri_info) ? item.rri_info.length : 'N/A'
+    })
   }
 
   // Get raw sleep duration and normalize it to minutes
@@ -170,12 +175,12 @@ function extractMetric(item: any): HealthMetric | null {
       "steps", "step_count", "count",
       // Samsung Health m-prefixed fields
       "mStepCount", "mWalkStepCount", "mRunStepCount", "mTotalStepCount"
-    ]),
+    ]) || extractActivityFromAccelerometer(item),
     heartRate: findNumericField(item, [
       "heart_rate", "bpm", "hr", "heartRate", "pulse", "value", "rate",
       // Samsung Health m-prefixed fields
       "mHeartRate", "mBpm", "mPulse"
-    ]),
+    ]) || extractHeartRateFromRRI(item),
     sleepDuration,
     sleepStage: findStringField(item, ["sleep_stage", "stage"]),
     calories: findNumericField(item, [
@@ -248,40 +253,89 @@ function findStringField(obj: any, keys: string[]): string | undefined {
   return undefined
 }
 
+function extractHeartRateFromRRI(item: any): number | undefined {
+  // Extract heart rate from RRI (RR interval) data
+  if (item.rri_info && Array.isArray(item.rri_info)) {
+    // RRI format appears to be [type, bpm, interval_ms]
+    const rriData = item.rri_info
+    if (rriData.length > 0) {
+      // Calculate average BPM from RRI data
+      const bpmValues = rriData
+        .filter((rri: any) => Array.isArray(rri) && rri.length >= 2)
+        .map((rri: any) => rri[1]) // Second element appears to be BPM
+        .filter((bpm: any) => typeof bpm === 'number' && bpm > 0)
+      
+      if (bpmValues.length > 0) {
+        const avgBpm = bpmValues.reduce((sum: number, bpm: number) => sum + bpm, 0) / bpmValues.length
+        console.log(`Extraído ritmo cardíaco de RRI: ${Math.round(avgBpm)} BPM (${bpmValues.length} mediciones)`)
+        return Math.round(avgBpm)
+      }
+    }
+  }
+  return undefined
+}
+
+function extractActivityFromAccelerometer(item: any): number | undefined {
+  // Extract activity level from accelerometer data
+  if (item.acc && Array.isArray(item.acc) && item.acc.length > 0) {
+    // Calculate activity intensity from accelerometer variance
+    const accData = item.acc.filter((val: any) => typeof val === 'number')
+    if (accData.length >= 3) {
+      // Simple activity estimation based on accelerometer variance
+      const variance = accData.reduce((sum: number, val: number, idx: number) => {
+        if (idx === 0) return 0
+        return sum + Math.abs(val - accData[idx - 1])
+      }, 0) / (accData.length - 1)
+      
+      // Convert variance to approximate step count (very rough estimation)
+      const estimatedSteps = Math.min(Math.round(variance / 1000000), 100) // Cap at 100 steps per sample
+      if (estimatedSteps > 0) {
+        console.log(`Actividad estimada del acelerómetro: ${estimatedSteps} pasos (varianza: ${Math.round(variance)})`)
+        return estimatedSteps
+      }
+    }
+  }
+  return undefined
+}
+
 function normalizeSleepDuration(duration: number, item: any): number {
-  console.log(`Normalizando duración de sueño: ${duration}, item:`, item)
+  console.log(`🛌 Normalizando duración de sueño: ${duration}`)
+  console.log(`📋 Campos disponibles:`, Object.keys(item))
   
-  // If the field name suggests it's already in minutes, return as is
-  if (item.duration_minutes !== undefined) {
-    console.log(`Duración ya en minutos: ${duration}`)
-    return duration
+  // If duration is 0 or negative, filter it out
+  if (duration <= 0) {
+    console.log(`❌ Duración inválida: ${duration}`)
+    return 0
   }
   
-  // Samsung Health often stores sleep duration in milliseconds
-  // If the number is very large (> 1440 minutes = 24 hours), it's likely milliseconds
-  if (duration > 1440) {
-    const minutes = Math.round(duration / (1000 * 60))
-    console.log(`Convertido de milisegundos a minutos: ${duration} -> ${minutes}`)
-    return minutes
+  let normalizedMinutes = duration
+  
+  // Detect unit based on magnitude
+  if (duration > 86400000) {
+    // Very large numbers (> 86400000) are likely milliseconds
+    normalizedMinutes = Math.round(duration / (1000 * 60))
+    console.log(`🔄 Convertido de milisegundos: ${duration} -> ${normalizedMinutes}min (${(normalizedMinutes/60).toFixed(1)}h)`)
+  } else if (duration > 86400) {
+    // Large numbers (> 86400) might be milliseconds or microseconds
+    normalizedMinutes = Math.round(duration / (1000 * 60))
+    console.log(`🔄 Convertido de milisegundos: ${duration} -> ${normalizedMinutes}min (${(normalizedMinutes/60).toFixed(1)}h)`)
+  } else if (duration > 1440) {
+    // Numbers > 1440 are likely seconds
+    normalizedMinutes = Math.round(duration / 60)
+    console.log(`🔄 Convertido de segundos: ${duration} -> ${normalizedMinutes}min (${(normalizedMinutes/60).toFixed(1)}h)`)
+  } else {
+    // Numbers <= 1440 are likely already minutes
+    console.log(`✅ Asumiendo minutos: ${duration}min (${(duration/60).toFixed(1)}h)`)
   }
   
-  // If it's between 1440 and 86400, it might be seconds
-  if (duration > 1440 && duration <= 86400) {
-    const minutes = Math.round(duration / 60)
-    console.log(`Convertido de segundos a minutos: ${duration} -> ${minutes}`)
-    return minutes
+  // Validate final result is reasonable (30 minutes to 16 hours)
+  if (normalizedMinutes < 30 || normalizedMinutes > 960) {
+    console.warn(`⚠️ Duración fuera de rango realista: ${normalizedMinutes}min (${(normalizedMinutes/60).toFixed(1)}h) - filtrando`)
+    return 0
   }
   
-  // If it's a reasonable number for minutes (0-1440), return as is
-  if (duration <= 1440) {
-    console.log(`Duración ya en rango de minutos: ${duration}`)
-    return duration
-  }
-  
-  // For very large numbers, assume milliseconds
-  const minutes = Math.round(duration / (1000 * 60))
-  console.log(`Número muy grande, asumiendo milisegundos: ${duration} -> ${minutes}`)
-  return minutes
+  console.log(`✅ Duración normalizada: ${normalizedMinutes}min (${(normalizedMinutes/60).toFixed(1)}h)`)
+  return normalizedMinutes
 }
 
 // Group metrics by date for daily aggregation
@@ -316,12 +370,34 @@ export function calculateDailyAggregates(metrics: HealthMetric[]): HealthMetric[
     const sleepValues = dayMetrics.map((m) => m.sleepDuration).filter((v): v is number => v !== undefined)
     const calorieValues = dayMetrics.map((m) => m.calories).filter((v): v is number => v !== undefined)
 
+    // Debug sleep values for this day
+    if (sleepValues.length > 0) {
+      console.log(`📅 ${dateStr}: ${sleepValues.length} valores de sueño encontrados:`, sleepValues.map(v => `${v}min (${(v/60).toFixed(1)}h)`))
+    }
+
+    // For sleep, we want the total sleep duration per day, not average
+    // If there are multiple sleep sessions, we sum them (naps + main sleep)
+    let dailySleep: number | undefined = undefined
+    if (sleepValues.length > 0) {
+      // Filter out unrealistic values (less than 30min or more than 16h)
+      const validSleepValues = sleepValues.filter(v => v >= 30 && v <= 960)
+      
+      if (validSleepValues.length > 0) {
+        // If there's only one value, use it. If multiple, sum them (could be naps + main sleep)
+        dailySleep = validSleepValues.length === 1 
+          ? validSleepValues[0] 
+          : Math.round(validSleepValues.reduce((a, b) => a + b))
+        
+        console.log(`📊 ${dateStr}: Sueño total del día: ${dailySleep}min (${(dailySleep/60).toFixed(1)}h) - ${validSleepValues.length} sesiones`)
+      }
+    }
+
     // Add daily aggregate for steps, sleep, calories
-    if (stepsValues.length || sleepValues.length || calorieValues.length) {
+    if (stepsValues.length || dailySleep !== undefined || calorieValues.length) {
       aggregates.push({
         date: baseDate,
         steps: stepsValues.length ? Math.round(stepsValues.reduce((a, b) => a + b) / stepsValues.length) : undefined,
-        sleepDuration: sleepValues.length ? Math.round(sleepValues.reduce((a, b) => a + b)) : undefined,
+        sleepDuration: dailySleep,
         calories: calorieValues.length ? Math.round(calorieValues.reduce((a, b) => a + b)) : undefined,
       })
     }

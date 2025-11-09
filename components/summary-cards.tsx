@@ -17,9 +17,16 @@ export function SummaryCards({ metrics }: SummaryCardsProps) {
   const avgHeartRate = Math.round(
     metrics.reduce((sum, m) => sum + (m.heartRate || 0), 0) / metrics.filter((m) => m.heartRate).length || 0,
   )
-  const totalSleep = metrics.reduce((sum, m) => sum + (m.sleepDuration || 0), 0)
-  const avgSleepMinutes = totalSleep / metrics.filter((m) => m.sleepDuration).length || 0
-  const avgSleep = (avgSleepMinutes / 60).toFixed(1) // Convert to hours with 1 decimal
+  // Filter sleep metrics with realistic values (1-16 hours, excluding 24-hour values)
+  const sleepMetrics = metrics.filter((m) => 
+    m.sleepDuration && 
+    m.sleepDuration >= 60 && 
+    m.sleepDuration <= 960 &&
+    m.sleepDuration !== 1440
+  )
+  const totalSleep = sleepMetrics.reduce((sum, m) => sum + (m.sleepDuration || 0), 0)
+  const avgSleepMinutes = sleepMetrics.length > 0 ? totalSleep / sleepMetrics.length : 0
+  const avgSleep = sleepMetrics.length > 0 ? (avgSleepMinutes / 60).toFixed(1) : "0.0"
 
   const cards = [
     {
