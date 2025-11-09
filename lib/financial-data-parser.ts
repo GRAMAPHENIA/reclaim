@@ -1,4 +1,5 @@
 // Parser para datos financieros de MercadoPago y otros servicios
+import JSZip from 'jszip'
 
 export interface FinancialTransaction {
   date: Date
@@ -250,13 +251,152 @@ export function processFinancialData(transactions: FinancialTransaction[]): Proc
   }
 }
 
-// Función principal para procesar archivos financieros
+// Parser específico para JSON de MercadoPago (formato del reporte oficial)
+export function parseMercadoPagoJSON(jsonData: any[]): FinancialTransaction[] {
+  const transactions: FinancialTransaction[] = []
+
+  for (const item of jsonData) {
+    try {
+      const creationDate = parseDate(item.creation_date)
+      if (!creationDate) continue
+
+      // Parsear el valor (formato: "$ -1.234,56" o "$ 1.234,56")
+      const valueStr = item.value || ''
+      const amount = parseMercadoPagoAmount(valueStr)
+      if (amount === null) continue
+
+      // Determinar tipo basado en el monto
+      const transactionType: 'credit' | 'debit' = amount > 0 ? 'credit' : 'debit'
+
+      // Clasificar automáticamente basado en el título y tipo
+      const category = classifyMercadoPagoTransaction(item.title, item.type, transactionType)
+
+      transactions.push({
+        date: creationDate,
+        description: item.title || 'Sin descripción',
+        amount: Math.abs(amount),
+        type: transactionType,
+        category,
+        paymentMethod: 'MercadoPago',
+        status: item.status || 'approved',
+        reference: item.creation_date, // Usar fecha como referencia única
+        rawData: item
+      })
+    } catch (error) {
+      console.warn('Error parsing MercadoPago JSON item:', item, error)
+    }
+  }
+
+  return transactions.sort((a, b) => b.date.getTime() - a.date.getTime())
+}
+
+// Función auxiliar para parsear montos de MercadoPago (formato argentino)
+function parseMercadoPagoAmount(valueStr: string): number | null {
+  if (!valueStr || typeof valueStr !== 'string') return null
+
+  try {
+    // Remover símbolo de peso y espacios
+    let cleanValue = valueStr.replace(/[$\s]/g, '')
+
+    // Determinar si es positivo o negativo
+    const isNegative = cleanValue.startsWith('-')
+    if (isNegative) {
+      cleanValue = cleanValue.substring(1)
+    }
+
+    // Convertir formato argentino: 1.234,56 -> 1234.56
+    if (cleanValue.includes('.') && cleanValue.includes(',')) {
+      cleanValue = cleanValue.replace(/\./g, '').replace(',', '.')
+    } else if (cleanValue.includes(',')) {
+      cleanValue = cleanValue.replace(',', '.')
+    }
+
+    const amount = parseFloat(cleanValue)
+    if (isNaN(amount)) return null
+
+    return isNegative ? -amount : amount
+  } catch (error) {
+    console.warn('Error parsing MercadoPago amount:', valueStr, error)
+    return null
+  }
+}
+
+// Clasificación específica para transacciones de MercadoPago
+function classifyMercadoPagoTransaction(title: string, type: string, transactionType: 'credit' | 'debit'): string {
+  const titleLower = title.toLowerCase()
+  const typeLower = type.toLowerCase()
+
+  // Si es ingreso, clasificar como tal
+  if (transactionType === 'credit') {
+    if (titleLower.includes('transferencia recibida') || typeLower.includes('cvu_movement') || typeLower.includes('collector')) {
+      return 'Ingreso'
+    }
+    return 'Ingreso'
+  }
+
+  // Para egresos, clasificar por tipo y título
+  if (typeLower.includes('purchase') || titleLower.includes('pago')) {
+    if (titleLower.includes('tienda física') || titleLower.includes('online')) {
+      return 'Compras'
+    }
+    if (titleLower.includes('celular') || titleLower.includes('recarga')) {
+      return 'Servicios'
+    }
+  }
+
+  if (titleLower.includes('transferencia enviada') || typeLower.includes('sender') || typeLower.includes('transfer_mo_payout_movement')) {
+    return 'Transferencias'
+  }
+
+  // Categorías específicas detectadas en el ejemplo
+  if (titleLower.includes('pago online') || titleLower.includes('pago en tienda')) {
+    return 'Compras'
+  }
+
+  // Fallback a categorías generales
+  return classifyTransaction(title, transactionType === 'debit' ? -1000 : 1000)
+}
+
+// Función principal para procesar archivos financieros (soporta CSV, JSON y ZIP)
 export function parseFinancialFile(file: File): Promise<ProcessedFinancialData> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        if (file.name.toLowerCase().endsWith('.zip')) {
+          // Procesar archivo ZIP
+          const zip = new JSZip()
+          const zipContent = await zip.loadAsync(e.target?.result as ArrayBuffer)
+          const transactions: FinancialTransaction[] = []
+
+          // Procesar cada archivo en el ZIP
+          for (const [filename, zipEntry] of Object.entries(zipContent.files)) {
+            if (zipEntry.dir) continue // Saltar directorios
+
+            if (filename.toLowerCase().endsWith('.json')) {
+              const content = await zipEntry.async('text')
+              const jsonData = JSON.parse(content)
+              if (Array.isArray(jsonData)) {
+                transactions.push(...parseMercadoPagoJSON(jsonData))
+              }
+            } else if (filename.toLowerCase().endsWith('.csv')) {
+              const content = await zipEntry.async('text')
+              transactions.push(...parseMercadoPagoCSV(content))
+            }
+          }
+
+          if (transactions.length === 0) {
+            reject(new Error('No se encontraron archivos CSV o JSON válidos en el archivo ZIP'))
+            return
+          }
+
+          const processedData = processFinancialData(transactions)
+          resolve(processedData)
+          return
+        }
+
+        // Procesar archivos normales (no ZIP)
         const content = e.target?.result as string
 
         if (!content) {
@@ -267,10 +407,19 @@ export function parseFinancialFile(file: File): Promise<ProcessedFinancialData> 
         // Detectar tipo de archivo y parsear
         let transactions: FinancialTransaction[] = []
 
-        if (file.name.toLowerCase().endsWith('.csv')) {
+        if (file.name.toLowerCase().endsWith('.json')) {
+          // Parsear como JSON de MercadoPago
+          const jsonData = JSON.parse(content)
+          if (Array.isArray(jsonData)) {
+            transactions = parseMercadoPagoJSON(jsonData)
+          } else {
+            reject(new Error('El archivo JSON debe contener un array de transacciones'))
+            return
+          }
+        } else if (file.name.toLowerCase().endsWith('.csv')) {
           transactions = parseMercadoPagoCSV(content)
         } else {
-          reject(new Error('Formato de archivo no soportado. Use CSV.'))
+          reject(new Error('Formato de archivo no soportado. Use CSV, JSON o ZIP de MercadoPago.'))
           return
         }
 
@@ -288,6 +437,12 @@ export function parseFinancialFile(file: File): Promise<ProcessedFinancialData> 
     }
 
     reader.onerror = () => reject(new Error('Error leyendo el archivo'))
-    reader.readAsText(file)
+
+    // Leer como ArrayBuffer para ZIP, como texto para otros archivos
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      reader.readAsArrayBuffer(file)
+    } else {
+      reader.readAsText(file)
+    }
   })
 }

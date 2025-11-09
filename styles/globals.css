@@ -123,3 +123,34 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Scrollbar personalizado con colores pastel */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225 / 0.5); /* slate-300 con opacidad */
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(148 163 184 / 0.7); /* slate-400 con opacidad */
+}
+
+/* Dark mode scrollbar */
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(71 85 105 / 0.5); /* slate-600 con opacidad */
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139 / 0.7); /* slate-500 con opacidad */
+}

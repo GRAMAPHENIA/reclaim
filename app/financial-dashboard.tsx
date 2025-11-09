@@ -22,6 +22,8 @@ export default function FinancialDashboard() {
   const [transactionsCount, setTransactionsCount] = useState(0)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [insights, setInsights] = useState<FinancialInsightsType | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const transactionsPerPage = 50
 
   useEffect(() => {
     // Initial load
@@ -119,6 +121,16 @@ export default function FinancialDashboard() {
     })
   }
 
+  // Calcular paginación
+  const totalPages = Math.ceil(displayTransactions.length / transactionsPerPage)
+  const startIndex = (currentPage - 1) * transactionsPerPage
+  const endIndex = startIndex + transactionsPerPage
+  const currentTransactions = displayTransactions.slice(startIndex, endIndex)
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
+
   // Get unique categories for filter
   const categories = Array.from(new Set(transactions.map(t => t.category))).sort()
 
@@ -128,9 +140,7 @@ export default function FinancialDashboard() {
       <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">$</span>
-            </div>
+            <img src="/logo.svg" alt="Reclaim Logo" className="w-10 h-10" />
             <h1 className="text-3xl font-bold">Reclaim</h1>
           </div>
           <p className="text-muted-foreground">Importa y analiza tus datos financieros en tiempo real</p>
@@ -251,9 +261,9 @@ export default function FinancialDashboard() {
               {/* Recent Transactions */}
               <div className="bg-card border border-border p-6">
                 <h2 className="text-lg font-semibold mb-4">Transacciones Recientes</h2>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {displayTransactions.slice(0, 20).map((transaction, index) => (
-                    <div key={`${transaction.reference}-${index}`} className="flex items-center justify-between p-3 border border-border rounded">
+                <div className="space-y-2">
+                  {currentTransactions.map((transaction, index) => (
+                    <div key={`${transaction.reference}-${index}`} className="flex items-center justify-between p-3 border border-border rounded hover:bg-muted/50 transition-colors">
                       <div className="flex-1">
                         <p className="font-medium">{transaction.description}</p>
                         <p className="text-sm text-muted-foreground">
@@ -261,7 +271,7 @@ export default function FinancialDashboard() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-semibold ${transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`font-semibold ${transaction.type === 'credit' ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
                           {transaction.type === 'credit' ? '+' : '-'}${transaction.amount.toLocaleString('es-AR')}
                         </p>
                         <p className="text-xs text-muted-foreground">{transaction.paymentMethod}</p>
@@ -269,10 +279,74 @@ export default function FinancialDashboard() {
                     </div>
                   ))}
                 </div>
-                {displayTransactions.length > 20 && (
-                  <p className="text-center text-muted-foreground mt-4">
-                    Mostrando 20 de {displayTransactions.length} transacciones
-                  </p>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                    <div className="text-sm text-muted-foreground">
+                      Mostrando {startIndex + 1}-{Math.min(endIndex, displayTransactions.length)} de {displayTransactions.length} transacciones
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {/* Ir al primero */}
+                      <button
+                        onClick={() => goToPage(1)}
+                        disabled={currentPage === 1}
+                        className="px-2 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title="Primera página"
+                      >
+                        ««
+                      </button>
+
+                      {/* Anterior */}
+                      <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Anterior
+                      </button>
+
+                      {/* Números de página */}
+                      <div className="flex gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
+                          if (pageNum > totalPages) return null
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => goToPage(pageNum)}
+                              className={`px-3 py-1 text-sm border rounded transition-colors ${
+                                pageNum === currentPage
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'border-border hover:bg-muted'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* Siguiente */}
+                      <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Siguiente
+                      </button>
+
+                      {/* Ir al último */}
+                      <button
+                        onClick={() => goToPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="px-2 py-1 text-sm border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        title="Última página"
+                      >
+                        »»
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -283,7 +357,7 @@ export default function FinancialDashboard() {
       {/* Footer */}
       <footer className="border-t border-border bg-card px-6 py-4">
         <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-          <p>Reclaim - Tu dinero, tus datos, tu control</p>
+          <p>Reclaim v1.0.0 - Tu dinero, tus datos, tu control</p>
         </div>
       </footer>
 

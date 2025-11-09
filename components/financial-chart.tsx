@@ -40,15 +40,11 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
         fullMonth: date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
         credits: data.credits,
         debits: data.debits,
-        net: data.net
+        net: data.net,
+        sortKey: date.getTime() // Agregar clave de ordenamiento
       }
     })
-    .sort((a, b) => {
-      const [aMonth, aYear] = a.month.split(' ')
-      const [bMonth, bYear] = b.month.split(' ')
-      if (aYear !== bYear) return aYear.localeCompare(bYear)
-      return aMonth.localeCompare(bMonth)
-    })
+    .sort((a, b) => a.sortKey - b.sortKey) // Ordenar cronológicamente
 
   if (chartData.length === 0) {
     return <div className="text-muted-foreground text-center py-8">No hay suficientes datos para generar el gráfico</div>

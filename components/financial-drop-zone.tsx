@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Upload, FileText, DollarSign } from "lucide-react"
+import { Upload, FileText, DollarSign, FileArchive, Folder } from "lucide-react"
 import { toast } from "sonner"
 import { parseFinancialFile } from "@/lib/financial-data-parser"
 import { financialStore } from "@/lib/financial-store"
@@ -65,12 +65,12 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
       for (const file of files) {
         console.log(`Procesando archivo: ${file.name}, tipo: ${file.type}, tamaño: ${file.size}`)
 
-        if (file.name.toLowerCase().endsWith('.csv')) {
+        if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
           const processed = await processFinancialFile(file)
           totalProcessed += processed
         } else {
           toast.warning(`Archivo no soportado: ${file.name}`, {
-            description: "Solo se aceptan archivos CSV de MercadoPago"
+            description: "Solo se aceptan archivos CSV, JSON y ZIP de MercadoPago"
           })
         }
       }
@@ -99,7 +99,7 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
       let totalProcessed = 0
 
       for (const file of files) {
-        if (file.name.toLowerCase().endsWith('.csv')) {
+        if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
           const processed = await processFinancialFile(file)
           totalProcessed += processed
         } else {
@@ -136,15 +136,23 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
         </h3>
 
         <div className="text-sm text-muted-foreground mb-4 space-y-2">
-          <p>Importa tus transacciones para analizar tus finanzas</p>
+          <p>Importa tus datos financieros de MercadoPago</p>
           <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span>Archivos JSON</span>
+            </div>
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               <span>Archivos CSV</span>
             </div>
             <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              <span>Datos de MercadoPago</span>
+              <FileArchive className="w-4 h-4" />
+              <span>Archivos ZIP</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Folder className="w-4 h-4" />
+              <span>Carpetas completas</span>
             </div>
           </div>
         </div>
@@ -154,20 +162,17 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
             <input
               type="file"
               multiple
-              accept=".csv"
+              accept=".csv,.json,.zip"
               onChange={handleFileInput}
               disabled={isProcessing}
               className="hidden"
             />
             <span className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50">
-              {isProcessing ? "Procesando..." : "Seleccionar archivo CSV"}
+              {isProcessing ? "Procesando..." : "Seleccionar archivos"}
             </span>
           </label>
         </div>
 
-        <div className="mt-4 text-xs text-muted-foreground">
-          <p>💡 Tip: Desde mercadopago.com.ar → Tu perfil → Privacidad → Descargá tu información</p>
-        </div>
       </div>
     </div>
   )
