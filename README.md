@@ -18,7 +18,7 @@ Reclaim es una plataforma de análisis financiero personal que transforma tus da
 
 ### 🎯 Características principales
 - 📊 **Dashboard financiero completo** con métricas en tiempo real
-- 🤖 **Pronósticos inteligentes** del próximo mes con IA
+- 📊 **Pronósticos inteligentes** del próximo mes basados en análisis de datos
 - 📈 **Análisis de tendencias** y patrones de gasto
 - 🚨 **Alertas inteligentes** para gastos inusuales
 - 💡 **Recomendaciones personalizadas** basadas en tus hábitos
@@ -26,11 +26,11 @@ Reclaim es una plataforma de análisis financiero personal que transforma tus da
 - 🌓 **Modo oscuro** y diseño responsive
 - 📤 **Exportación** de reportes en CSV
 
-### 🧠 Inteligencia Artificial integrada
+### 📈 Análisis avanzado de datos
 - **Clasificación automática** de transacciones por categorías
 - **Detección de anomalías** en gastos
 - **Pronósticos financieros** con intervalos de confianza
-- **Recomendaciones** basadas en machine learning básico
+- **Recomendaciones** basadas en análisis estadístico
 
 ## 🚀 Instalación
 
@@ -74,7 +74,7 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 ### 3. Explora tus finanzas
 
 - **Dashboard principal**: Métricas generales y saldo
-- **Pronósticos**: Predicciones del próximo mes
+- **Pronósticos**: Predicciones del próximo mes basadas en datos históricos
 - **Análisis de gastos**: Tendencias por categoría
 - **Alertas**: Notificaciones de gastos inusuales
 - **Recomendaciones**: Consejos personalizados
@@ -120,6 +120,6 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 ---
 
 <div align="center">
-  <p>🧠 Hecho con IA para potenciar tus finanzas personales</p>
+  <p>📊 Hecho con análisis de datos para potenciar tus finanzas personales</p>
   <p>⭐ Si te gusta Reclaim, ¡dale una estrella en GitHub!</p>
 </div>
