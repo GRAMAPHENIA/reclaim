@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
-import { FinancialDropZone } from "@/components/financial-drop-zone"
+import { EmptyState } from "@/components/EmptyState"
 import { FinancialCards } from "@/components/financial-cards"
 import { FinancialInsights } from "@/components/financial-insights"
 import { FloatingImportBar } from "@/components/floating-import-bar"
@@ -35,7 +35,6 @@ import { ExportService } from "@/lib/services/export.service"
  */
 export default function FinancialDashboard() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [transactionsCount, setTransactionsCount] = useState(0)
 
   // Hooks personalizados
   const { transactions, insights, categories } = useFinancialData()
@@ -84,14 +83,7 @@ export default function FinancialDashboard() {
       <main className={`flex-1 ${transactions.length > 0 ? 'pb-48' : 'pb-32'}`}>
         <div className="max-w-7xl mx-auto px-6 py-8">
           {transactions.length === 0 ? (
-            <div className="space-y-6">
-              <FinancialDropZone onFilesProcessed={(count) => setTransactionsCount(count)} />
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  Arrastra archivos CSV exportados desde MercadoPago para comenzar
-                </p>
-              </div>
-            </div>
+            <EmptyState />
           ) : (
             <div className="space-y-8">
               {/* Filters and Actions */}
