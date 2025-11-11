@@ -1,117 +1,25 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
 import { Upload, FileText, DollarSign, FileArchive, Folder } from "lucide-react"
-import { toast } from "sonner"
-import { parseFinancialFile } from "@/lib/financial-data-parser"
-import { financialStore } from "@/lib/financial-store"
+import { useFileImport } from "@/hooks/useFileImport"
 
+/**
+ * Componente de zona de arrastre para importar archivos financieros
+ * Responsabilidad: UI de importación inicial (pantalla vacía)
+ */
 interface FinancialDropZoneProps {
   onFilesProcessed?: (count: number) => void
 }
 
 export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = () => {
-    setIsDragging(false)
-  }
-
-  const processFinancialFile = async (file: File) => {
-    try {
-      console.log(`Procesando archivo financiero: ${file.name}`)
-      const processedData = await parseFinancialFile(file)
-
-      console.log(`Archivo procesado: ${processedData.transactions.length} transacciones`)
-      console.log(`Período: ${processedData.summary.period.start.toLocaleDateString()} - ${processedData.summary.period.end.toLocaleDateString()}`)
-      console.log(`Saldo neto: $${processedData.summary.netBalance.toFixed(2)}`)
-
-      financialStore.addFinancialData(processedData)
-
-      // Notificación de éxito
-      toast.success(`Datos financieros importados`, {
-        description: `${processedData.transactions.length} transacciones procesadas`
-      })
-
-      return processedData.transactions.length
-    } catch (error) {
-      console.error("Error procesando archivo financiero:", error)
-      toast.error(`Error procesando ${file.name}`, {
-        description: error instanceof Error ? error.message : "Error desconocido"
-      })
-      return 0
-    }
-  }
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    setIsProcessing(true)
-
-    try {
-      const files = Array.from(e.dataTransfer.files)
-      console.log(`Archivos arrastrados: ${files.length}`)
-
-      let totalProcessed = 0
-
-      for (const file of files) {
-        console.log(`Procesando archivo: ${file.name}, tipo: ${file.type}, tamaño: ${file.size}`)
-
-        if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
-          const processed = await processFinancialFile(file)
-          totalProcessed += processed
-        } else {
-          toast.warning(`Archivo no soportado: ${file.name}`, {
-            description: "Solo se aceptan archivos CSV, JSON y ZIP de MercadoPago"
-          })
-        }
-      }
-
-      onFilesProcessed?.(totalProcessed)
-
-      if (totalProcessed > 0) {
-        toast.success(`Importación completada`, {
-          description: `Se procesaron ${totalProcessed} transacciones en total`
-        })
-      }
-    } catch (error) {
-      console.error('Error en handleDrop:', error)
-      toast.error("Error procesando archivos", {
-        description: error instanceof Error ? error.message : "Error desconocido"
-      })
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsProcessing(true)
-    try {
-      const files = Array.from(e.currentTarget.files || [])
-      let totalProcessed = 0
-
-      for (const file of files) {
-        if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
-          const processed = await processFinancialFile(file)
-          totalProcessed += processed
-        } else {
-          toast.warning(`Archivo no soportado: ${file.name}`)
-        }
-      }
-
-      onFilesProcessed?.(totalProcessed)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
+  const {
+    isProcessing,
+    isDragging,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleFileInput
+  } = useFileImport(onFilesProcessed)
 
   return (
     <div
@@ -172,7 +80,6 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
             </span>
           </label>
         </div>
-
       </div>
     </div>
   )

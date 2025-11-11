@@ -45,20 +45,22 @@ function ThemeToggle({ children }: { children: React.ReactNode }) {
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Reclaim v1.0.0</DialogTitle>
+              <DialogTitle>Reclaim v2.0.0</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Análisis Financiero con IA - Importa tus datos de MercadoPago y descubre insights inteligentes sobre tus finanzas personales con pronósticos y recomendaciones basadas en IA.
+                Análisis Financiero Personal - Importa tus datos de MercadoPago y visualiza tus finanzas con gráficos, métricas y análisis detallados.
               </p>
               <div className="space-y-2">
                 <h4 className="font-medium">Características principales:</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Importación de datos desde MercadoPago</li>
-                  <li>• Análisis financiero inteligente</li>
-                  <li>• Pronósticos y recomendaciones con IA</li>
-                  <li>• Visualización de datos en tiempo real</li>
+                  <li>• Importación de archivos CSV, JSON y ZIP</li>
+                  <li>• Dashboard con métricas en tiempo real</li>
+                  <li>• Gráficos de evolución financiera</li>
+                  <li>• Análisis por categorías y períodos</li>
+                  <li>• Filtros avanzados y paginación</li>
                   <li>• Exportación de datos a CSV</li>
+                  <li>• Procesamiento 100% local (privacidad)</li>
                 </ul>
               </div>
               <div className="space-y-2">
@@ -66,9 +68,15 @@ function ThemeToggle({ children }: { children: React.ReactNode }) {
                 <ol className="text-sm text-muted-foreground space-y-1">
                   <li>1. Ve a mercadopago.com.ar → Tu perfil → Privacidad</li>
                   <li>2. Solicita tu reporte de "Tus movimientos de dinero"</li>
-                  <li>3. Descarga el archivo CSV o JSON</li>
-                  <li>4. Arrástralo aquí para importar tus datos</li>
+                  <li>3. Descarga el archivo ZIP, CSV o JSON</li>
+                  <li>4. Arrástralo aquí o usa el botón de importar</li>
+                  <li>5. Explora tus datos con filtros y gráficos</li>
                 </ol>
+              </div>
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  v2.0.0 - Arquitectura modular y optimizada
+                </p>
               </div>
             </div>
           </DialogContent>

@@ -9,8 +9,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Reclaim v1.0.0 - Análisis Financiero con IA",
-  description: "Importa tus datos de MercadoPago y descubre insights inteligentes sobre tus finanzas personales con pronósticos y recomendaciones basadas en IA",
+  title: "Reclaim v2.0.0 - Análisis Financiero Personal",
+  description: "Importa tus datos de MercadoPago y visualiza tus finanzas con gráficos, métricas y análisis detallados. Procesamiento 100% local y privado.",
   generator: "v0.app",
   keywords: ["finanzas personales", "análisis financiero", "MercadoPago", "presupuesto", "IA financiera", "datos bancarios"],
   icons: {

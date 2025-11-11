@@ -33,7 +33,7 @@ export function Footer({ hasFloatingBar = false }: FooterProps) {
 
     const subject = encodeURIComponent(`Bug Report: ${bugReport.title}`)
     const body = encodeURIComponent(`
-BUG REPORT - Reclaim v1.0.0
+BUG REPORT - Reclaim v2.0.0
 ${'='.repeat(50)}
 
 INFORMACIÓN DEL SISTEMA:
@@ -79,7 +79,7 @@ REPORTADO POR: Usuario de Reclaim
     return (
       <div className="fixed bottom-4 right-4 z-50">
         <div className="bg-card border border-border px-3 py-2 shadow-sm flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Reclaim v1.0.0</span>
+          <span className="text-xs text-muted-foreground">Reclaim v2.0.0</span>
           {mounted && (
             <Dialog open={isBugReportOpen} onOpenChange={setIsBugReportOpen}>
               <DialogTrigger asChild>
@@ -180,7 +180,7 @@ REPORTADO POR: Usuario de Reclaim
     <footer className="border-t border-border bg-card mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-center text-sm text-muted-foreground">
-          <span>Reclaim v1.0.0</span>
+          <span>Reclaim v2.0.0</span>
         </div>
       </div>
     </footer>
