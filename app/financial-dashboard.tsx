@@ -80,11 +80,11 @@ export default function FinancialDashboard() {
       <DashboardHeader />
 
       {/* Main Content */}
-      <main className={`flex-1 ${transactions.length > 0 ? 'pb-48' : 'pb-32'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {transactions.length === 0 ? (
-            <EmptyState />
-          ) : (
+      <main className={`flex-1 ${transactions.length > 0 ? 'pb-48' : ''}`}>
+        {transactions.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="max-w-7xl mx-auto px-6 py-8">(
             <div className="space-y-8">
               {/* Filters and Actions */}
               <div className="bg-card p-4 sm:p-6 border border-border space-y-4">
@@ -133,8 +133,8 @@ export default function FinancialDashboard() {
                 />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       {/* Floating Import Bar */}

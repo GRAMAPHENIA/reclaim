@@ -1,7 +1,18 @@
 "use client"
 
-import { Upload, FileArchive, Folder, FileText, Paperclip, Plus } from "lucide-react"
+import { Upload, FileArchive, Folder, FileText, Paperclip, Plus, HelpCircle } from "lucide-react"
 import { useFileImport } from "@/hooks/useFileImport"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 /**
  * Componente de barra flotante para importar archivos
@@ -59,34 +70,52 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
           <div className="flex items-center gap-3 p-4">
             {/* Attachment Buttons */}
             <div className="flex gap-1">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  multiple
-                  accept=".csv,.json,.zip"
-                  onChange={handleFileInput}
-                  disabled={isProcessing}
-                  className="hidden"
-                />
-                <div className="p-2 hover:bg-muted transition-colors rounded">
-                  <Paperclip className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        multiple
+                        accept=".csv,.json,.zip"
+                        onChange={handleFileInput}
+                        disabled={isProcessing}
+                        className="hidden"
+                      />
+                      <div className="p-2 hover:bg-muted transition-colors rounded">
+                        <Paperclip className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    </label>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Seleccionar archivos</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  // @ts-ignore - webkitdirectory no está en tipos pero es soportado
-                  webkitdirectory=""
-                  multiple
-                  onChange={handleFileInput}
-                  disabled={isProcessing}
-                  className="hidden"
-                />
-                <div className="p-2 hover:bg-muted transition-colors rounded">
-                  <Folder className="w-5 h-5 text-muted-foreground" />
-                </div>
-              </label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        // @ts-ignore - webkitdirectory no está en tipos pero es soportado
+                        webkitdirectory=""
+                        multiple
+                        onChange={handleFileInput}
+                        disabled={isProcessing}
+                        className="hidden"
+                      />
+                      <div className="p-2 hover:bg-muted transition-colors rounded">
+                        <Folder className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    </label>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Seleccionar carpeta</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             {/* Input Area */}
@@ -118,25 +147,102 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
             </button>
           </div>
 
-          {/* File Type Indicators */}
+          {/* File Type Indicators with Help */}
           <div className="px-4 pb-3">
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                <span>CSV</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <FileText className="w-3 h-3" />
+                        <span>CSV</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Archivos CSV de MercadoPago</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <FileText className="w-3 h-3" />
+                        <span>JSON</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Archivos JSON del reporte oficial</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <FileArchive className="w-3 h-3" />
+                        <span>ZIP</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Archivos ZIP con múltiples archivos</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <Folder className="w-3 h-3" />
+                        <span>Carpetas</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Carpetas completas con archivos</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-              <div className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                <span>JSON</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <FileArchive className="w-3 h-3" />
-                <span>ZIP</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Folder className="w-3 h-3" />
-                <span>Carpetas</span>
-              </div>
+
+              {/* Help Popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button 
+                    className="p-1 hover:bg-muted rounded transition-colors" 
+                    aria-label="Ayuda"
+                    suppressHydrationWarning
+                  >
+                    <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end" suppressHydrationWarning>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Cómo obtener tus datos</h4>
+                    <ol className="text-xs text-muted-foreground space-y-2">
+                      <li className="flex gap-2">
+                        <span className="font-medium text-foreground">1.</span>
+                        <span>Ve a mercadopago.com.ar → Tu perfil → Privacidad</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-medium text-foreground">2.</span>
+                        <span>Solicita "Tus movimientos de dinero"</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-medium text-foreground">3.</span>
+                        <span>Descarga el archivo cuando esté listo</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-medium text-foreground">4.</span>
+                        <span>Arrástralo aquí o usa los botones</span>
+                      </li>
+                    </ol>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
