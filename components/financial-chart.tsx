@@ -1,7 +1,7 @@
 "use client"
 
 import type { FinancialTransaction } from "@/lib/financial-data-parser"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ReferenceLine, Legend } from "recharts"
 
 interface FinancialChartProps {
   transactions: FinancialTransaction[]
@@ -25,7 +25,6 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
     } else {
       current.debits += transaction.amount
     }
-    current.net = current.credits - current.debits
 
     monthlyData.set(monthKey, current)
   })
@@ -39,19 +38,32 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
         month: date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }),
         fullMonth: date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
         credits: data.credits,
-        debits: data.debits,
-        net: data.net,
-        sortKey: date.getTime() // Agregar clave de ordenamiento
+        debits: data.debits, // Positivo para mostrar hacia arriba
+        net: data.credits - data.debits,
+        sortKey: date.getTime()
       }
     })
-    .sort((a, b) => a.sortKey - b.sortKey) // Ordenar cronológicamente
+    .sort((a, b) => a.sortKey - b.sortKey)
 
   if (chartData.length === 0) {
     return <div className="text-muted-foreground text-center py-8">No hay suficientes datos para generar el gráfico</div>
   }
 
+  // Formato compacto para ejes (K, M)
+  const formatCompactCurrency = (value: number) => {
+    const absValue = Math.abs(value)
+    if (absValue >= 1000000) {
+      return `$${(absValue / 1000000).toFixed(1)}M`
+    }
+    if (absValue >= 1000) {
+      return `$${(absValue / 1000).toFixed(1)}K`
+    }
+    return `$${absValue.toFixed(0)}`
+  }
+
+  // Formato completo para tooltips
   const formatCurrency = (value: number) => {
-    return value.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })
+    return Math.abs(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })
   }
 
   if (type === 'line') {
@@ -68,7 +80,7 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
             <YAxis
               stroke="var(--color-muted-foreground)"
               fontSize={12}
-              tickFormatter={formatCurrency}
+              tickFormatter={formatCompactCurrency}
             />
             <Tooltip
               contentStyle={{
@@ -78,17 +90,27 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
               }}
               labelStyle={{ color: "var(--color-foreground)" }}
               formatter={(value: number, name: string) => [
-                formatCurrency(value),
-                name === 'net' ? 'Saldo Neto' : name === 'credits' ? 'Ingresos' : 'Gastos'
+                Math.abs(value).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' }),
+                name
               ]}
-              labelFormatter={(label) => `Mes: ${label}`}
+              labelFormatter={(label) => label}
+            />
+            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Line
+              type="monotone"
+              dataKey="credits"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+              name="Ingresos"
             />
             <Line
               type="monotone"
-              dataKey="net"
-              stroke="var(--color-chart-1)"
-              strokeWidth={3}
-              dot={{ fill: "var(--color-chart-1)", strokeWidth: 2, r: 4 }}
+              dataKey="debits"
+              stroke="#ef4444"
+              strokeWidth={2}
+              dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+              name="Gastos"
             />
           </LineChart>
         </ResponsiveContainer>
@@ -109,7 +131,7 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
           <YAxis
             stroke="var(--color-muted-foreground)"
             fontSize={12}
-            tickFormatter={formatCurrency}
+            tickFormatter={formatCompactCurrency}
           />
           <Tooltip
             contentStyle={{
@@ -120,20 +142,21 @@ export function FinancialChart({ transactions, type = 'bar' }: FinancialChartPro
             labelStyle={{ color: "var(--color-foreground)" }}
             formatter={(value: number, name: string) => [
               formatCurrency(value),
-              name === 'credits' ? 'Ingresos' : name === 'debits' ? 'Gastos' : 'Saldo Neto'
+              name === 'Ingresos' ? 'Ingresos' : 'Gastos'
             ]}
-            labelFormatter={(label) => `Mes: ${label}`}
+            labelFormatter={(label) => label}
           />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} />
           <Bar
             dataKey="credits"
-            fill="var(--color-chart-2)"
-            radius={[2, 2, 0, 0]}
+            fill="#10b981"
+            radius={[4, 4, 0, 0]}
             name="Ingresos"
           />
           <Bar
             dataKey="debits"
-            fill="var(--color-chart-1)"
-            radius={[2, 2, 0, 0]}
+            fill="#ef4444"
+            radius={[4, 4, 0, 0]}
             name="Gastos"
           />
         </BarChart>

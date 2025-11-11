@@ -107,8 +107,8 @@ export function parseMercadoPagoCSV(csvText: string): FinancialTransaction[] {
       const amount = parseAmount(amountStr)
       if (amount === null) continue
 
-      // Determinar tipo basado en el monto y descripción
-      const transactionType: 'credit' | 'debit' = amount > 0 ? 'credit' : 'debit'
+      // En MercadoPago: valores positivos = ingresos, valores negativos = gastos
+      const transactionType: 'credit' | 'debit' = amount >= 0 ? 'credit' : 'debit'
 
       // Clasificar automáticamente
       const category = classifyTransaction(description, amount)
@@ -265,8 +265,8 @@ export function parseMercadoPagoJSON(jsonData: any[]): FinancialTransaction[] {
       const amount = parseMercadoPagoAmount(valueStr)
       if (amount === null) continue
 
-      // Determinar tipo basado en el monto
-      const transactionType: 'credit' | 'debit' = amount > 0 ? 'credit' : 'debit'
+      // En MercadoPago: valores positivos = ingresos, valores negativos = gastos
+      const transactionType: 'credit' | 'debit' = amount >= 0 ? 'credit' : 'debit'
 
       // Clasificar automáticamente basado en el título y tipo
       const category = classifyMercadoPagoTransaction(item.title, item.type, transactionType)
@@ -326,31 +326,34 @@ function classifyMercadoPagoTransaction(title: string, type: string, transaction
   const titleLower = title.toLowerCase()
   const typeLower = type.toLowerCase()
 
-  // Si es ingreso, clasificar como tal
+  // Clasificar ingresos
   if (transactionType === 'credit') {
     if (titleLower.includes('transferencia recibida') || typeLower.includes('cvu_movement') || typeLower.includes('collector')) {
-      return 'Ingreso'
+      return 'Ingresos'
     }
-    return 'Ingreso'
+    if (titleLower.includes('dinero retirado') || typeLower.includes('release')) {
+      return 'Retiros'
+    }
+    if (titleLower.includes('dinero reservado') || typeLower.includes('fund')) {
+      return 'Reservas'
+    }
+    return 'Ingresos'
   }
 
-  // Para egresos, clasificar por tipo y título
-  if (typeLower.includes('purchase') || titleLower.includes('pago')) {
-    if (titleLower.includes('tienda física') || titleLower.includes('online')) {
-      return 'Compras'
+  // Clasificar egresos por tipo
+  if (titleLower.includes('pago en tienda') || titleLower.includes('compra') || typeLower.includes('purchase')) {
+    if (titleLower.includes('transporte') || titleLower.includes('carga de transporte')) {
+      return 'Transporte'
     }
-    if (titleLower.includes('celular') || titleLower.includes('recarga')) {
-      return 'Servicios'
-    }
+    return 'Compras'
   }
 
   if (titleLower.includes('transferencia enviada') || typeLower.includes('sender') || typeLower.includes('transfer_mo_payout_movement')) {
     return 'Transferencias'
   }
 
-  // Categorías específicas detectadas en el ejemplo
-  if (titleLower.includes('pago online') || titleLower.includes('pago en tienda')) {
-    return 'Compras'
+  if (titleLower.includes('dinero reservado') || typeLower.includes('fund')) {
+    return 'Reservas'
   }
 
   // Fallback a categorías generales
@@ -374,13 +377,34 @@ export function parseFinancialFile(file: File): Promise<ProcessedFinancialData> 
           for (const [filename, zipEntry] of Object.entries(zipContent.files)) {
             if (zipEntry.dir) continue // Saltar directorios
 
-            if (filename.toLowerCase().endsWith('.json')) {
+            const filenameLower = filename.toLowerCase()
+
+            if (filenameLower.endsWith('.json')) {
               const content = await zipEntry.async('text')
               const jsonData = JSON.parse(content)
-              if (Array.isArray(jsonData)) {
-                transactions.push(...parseMercadoPagoJSON(jsonData))
+              
+              if (Array.isArray(jsonData) && jsonData.length > 0) {
+                // Detectar si es archivo de facturas o transacciones
+                const firstItem = jsonData[0]
+                
+                if (firstItem.billing_concept !== undefined || firstItem.billing_date !== undefined) {
+                  // Es un archivo de facturas - procesarlo en el store de facturas
+                  try {
+                    const { billingStore } = await import('./billing-store')
+                    const { parseMercadoPagoBillingJSON } = await import('./billing-data-parser')
+                    const invoices = parseMercadoPagoBillingJSON(jsonData)
+                    if (invoices.length > 0) {
+                      billingStore.addInvoices(invoices)
+                    }
+                  } catch (error) {
+                    console.warn('Error processing billing data:', error)
+                  }
+                } else {
+                  // Es un archivo de transacciones
+                  transactions.push(...parseMercadoPagoJSON(jsonData))
+                }
               }
-            } else if (filename.toLowerCase().endsWith('.csv')) {
+            } else if (filenameLower.endsWith('.csv')) {
               const content = await zipEntry.async('text')
               transactions.push(...parseMercadoPagoCSV(content))
             }

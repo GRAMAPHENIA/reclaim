@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
  * Hook personalizado para manejar paginación
  * Responsabilidad: Gestionar estado de paginación y cálculos
  */
-export function usePagination<T>(items: T[], itemsPerPage: number = 50) {
+export function usePagination<T>(items: T[], itemsPerPage: number = 10) {
   const [currentPage, setCurrentPage] = useState(1)
 
   const totalPages = Math.ceil(items.length / itemsPerPage)

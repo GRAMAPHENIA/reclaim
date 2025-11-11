@@ -13,6 +13,7 @@ import { DashboardActions } from "@/components/dashboard/DashboardActions"
 import { ChartSection } from "@/components/dashboard/ChartSection"
 import { TransactionsList } from "@/components/dashboard/TransactionsList"
 import { TransactionsPagination } from "@/components/dashboard/TransactionsPagination"
+import { BillingModal } from "@/components/billing-modal"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ import { ExportService } from "@/lib/services/export.service"
  */
 export default function FinancialDashboard() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showBillingModal, setShowBillingModal] = useState(false)
 
   // Hooks personalizados
   const { transactions, insights, categories } = useFinancialData()
@@ -49,7 +51,7 @@ export default function FinancialDashboard() {
     clearFilters
   } = useFilters(transactions)
 
-  const pagination = usePagination(filteredTransactions, 50)
+  const pagination = usePagination(filteredTransactions, 10)
 
   // Handlers
   const handleClearData = () => {
@@ -84,7 +86,7 @@ export default function FinancialDashboard() {
         {transactions.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="max-w-7xl mx-auto px-6 py-8">(
+          <div className="max-w-7xl mx-auto px-6 py-8">
             <div className="space-y-8">
               {/* Filters and Actions */}
               <div className="bg-card p-4 sm:p-6 border border-border space-y-4">
@@ -101,6 +103,7 @@ export default function FinancialDashboard() {
                   onClearFilters={clearFilters}
                   onExport={handleExport}
                   onClearData={handleClearData}
+                  onOpenBilling={() => setShowBillingModal(true)}
                 />
               </div>
 
@@ -142,6 +145,12 @@ export default function FinancialDashboard() {
 
       {/* Footer */}
       <Footer hasFloatingBar={true} />
+
+      {/* Billing Modal */}
+      <BillingModal 
+        isOpen={showBillingModal} 
+        onClose={() => setShowBillingModal(false)} 
+      />
 
       {/* Confirm Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
