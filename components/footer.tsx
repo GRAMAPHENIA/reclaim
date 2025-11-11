@@ -28,6 +28,53 @@ export function Footer({ hasFloatingBar = false }: FooterProps) {
     setMounted(true)
   }, [])
 
+  // Bloquear scroll del body cuando el modal está abierto
+  useEffect(() => {
+    if (isBugReportOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+      
+      // Bloquear scroll y agregar padding
+      document.body.style.overflow = 'hidden'
+      document.body.style.paddingRight = `${scrollbarWidth}px`
+      
+      // Aplicar padding a elementos fixed
+      const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.paddingRight = `${scrollbarWidth}px`
+        }
+      })
+    } else {
+      // Delay para esperar la animación de cierre del modal
+      const timeoutId = setTimeout(() => {
+        document.body.style.overflow = 'unset'
+        document.body.style.paddingRight = '0px'
+        
+        // Remover padding de elementos fixed
+        const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
+        fixedElements.forEach((el) => {
+          if (el instanceof HTMLElement) {
+            el.style.paddingRight = '0px'
+          }
+        })
+      }, 200)
+      
+      return () => clearTimeout(timeoutId)
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+      document.body.style.paddingRight = '0px'
+      
+      const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.style.paddingRight = '0px'
+        }
+      })
+    }
+  }, [isBugReportOpen])
+
   const handleBugReportSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -97,7 +144,7 @@ REPORTADO POR: Usuario de Reclaim
               </DialogHeader>
               <form onSubmit={handleBugReportSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="bug-title">Título del bug *</Label>
+                  <Label htmlFor="bug-title" className="mb-2 block">Título del bug *</Label>
                   <Input
                     id="bug-title"
                     value={bugReport.title}
@@ -108,7 +155,7 @@ REPORTADO POR: Usuario de Reclaim
                 </div>
 
                 <div>
-                  <Label htmlFor="bug-description">Descripción del bug *</Label>
+                  <Label htmlFor="bug-description" className="mb-2 block">Descripción del bug *</Label>
                   <Textarea
                     id="bug-description"
                     value={bugReport.description}
@@ -120,7 +167,7 @@ REPORTADO POR: Usuario de Reclaim
                 </div>
 
                 <div>
-                  <Label htmlFor="bug-steps">Pasos para reproducir</Label>
+                  <Label htmlFor="bug-steps" className="mb-2 block">Pasos para reproducir</Label>
                   <Textarea
                     id="bug-steps"
                     value={bugReport.steps}
@@ -133,7 +180,7 @@ REPORTADO POR: Usuario de Reclaim
                 </div>
 
                 <div>
-                  <Label htmlFor="bug-expected">Comportamiento esperado</Label>
+                  <Label htmlFor="bug-expected" className="mb-2 block">Comportamiento esperado</Label>
                   <Textarea
                     id="bug-expected"
                     value={bugReport.expected}
@@ -144,7 +191,7 @@ REPORTADO POR: Usuario de Reclaim
                 </div>
 
                 <div>
-                  <Label htmlFor="bug-actual">Comportamiento actual</Label>
+                  <Label htmlFor="bug-actual" className="mb-2 block">Comportamiento actual</Label>
                   <Textarea
                     id="bug-actual"
                     value={bugReport.actual}

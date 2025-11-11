@@ -14,6 +14,7 @@ import { ChartSection } from "@/components/dashboard/ChartSection"
 import { TransactionsList } from "@/components/dashboard/TransactionsList"
 import { TransactionsPagination } from "@/components/dashboard/TransactionsPagination"
 import { BillingModal } from "@/components/billing-modal"
+import { YieldsModal } from "@/components/yields-modal"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +38,7 @@ import { ExportService } from "@/lib/services/export.service"
 export default function FinancialDashboard() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showBillingModal, setShowBillingModal] = useState(false)
+  const [showYieldsModal, setShowYieldsModal] = useState(false)
 
   // Hooks personalizados
   const { transactions, insights, categories } = useFinancialData()
@@ -104,6 +106,7 @@ export default function FinancialDashboard() {
                   onExport={handleExport}
                   onClearData={handleClearData}
                   onOpenBilling={() => setShowBillingModal(true)}
+                  onOpenYields={() => setShowYieldsModal(true)}
                 />
               </div>
 
@@ -150,6 +153,12 @@ export default function FinancialDashboard() {
       <BillingModal 
         isOpen={showBillingModal} 
         onClose={() => setShowBillingModal(false)} 
+      />
+
+      {/* Yields Modal */}
+      <YieldsModal 
+        isOpen={showYieldsModal} 
+        onClose={() => setShowYieldsModal(false)} 
       />
 
       {/* Confirm Dialog */}

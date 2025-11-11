@@ -399,6 +399,18 @@ export function parseFinancialFile(file: File): Promise<ProcessedFinancialData> 
                   } catch (error) {
                     console.warn('Error processing billing data:', error)
                   }
+                } else if (firstItem.ledger_datetime !== undefined && firstItem.description === 'Rendimientos') {
+                  // Es un archivo de rendimientos - procesarlo en el store de rendimientos
+                  try {
+                    const { yieldsStore } = await import('./yields-store')
+                    const { parseMercadoPagoYieldsJSON } = await import('./yields-data-parser')
+                    const yields = parseMercadoPagoYieldsJSON(jsonData)
+                    if (yields.length > 0) {
+                      yieldsStore.addYields(yields)
+                    }
+                  } catch (error) {
+                    console.warn('Error processing yields data:', error)
+                  }
                 } else {
                   // Es un archivo de transacciones
                   transactions.push(...parseMercadoPagoJSON(jsonData))
