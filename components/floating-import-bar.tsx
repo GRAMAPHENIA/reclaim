@@ -4,8 +4,8 @@ import { useState } from "react"
 import { Upload, FileArchive, Folder, FileText, Paperclip, Plus } from "lucide-react"
 import { toast } from "sonner"
 import JSZip from "jszip"
-import { parseHealthJSON, calculateDailyAggregates } from "@/lib/health-data-parser"
-import { healthStore } from "@/lib/health-store"
+import { parseFinancialFile } from "@/lib/financial-data-parser"
+import { financialStore } from "@/lib/financial-store"
 
 interface FloatingImportBarProps {
   onFilesProcessed?: (count: number) => void
@@ -15,33 +15,23 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
   const [isProcessing, setIsProcessing] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
 
-  const processJSONFile = async (file: File, fileName?: string) => {
+  const processFile = async (file: File, fileName?: string) => {
     try {
-      const text = await file.text()
-      const jsonData = JSON.parse(text)
-      const rawMetrics = parseHealthJSON(jsonData)
-      
-      const heartRateMetrics = rawMetrics.filter(m => m.heartRate !== undefined)
       const displayName = fileName || file.name
-      console.log(`Archivo ${displayName}:`)
-      console.log(`- Tipo de archivo: ${jsonData.type || 'Desconocido'}`)
-      console.log(`- Tiene live_data: ${jsonData.live_data ? 'Sí (' + jsonData.live_data.length + ' puntos)' : 'No'}`)
-      console.log(`- Total métricas: ${rawMetrics.length}`)
-      console.log(`- Métricas de ritmo cardíaco: ${heartRateMetrics.length}`)
-      
-      const aggregatedMetrics = calculateDailyAggregates(rawMetrics)
-      const aggregatedHeartRate = aggregatedMetrics.filter(m => m.heartRate !== undefined)
-      console.log(`- Métricas agregadas con ritmo cardíaco: ${aggregatedHeartRate.length}`)
+      console.log(`Procesando archivo financiero: ${displayName}`)
 
-      healthStore.addMetrics(aggregatedMetrics)
-      
-      if (aggregatedMetrics.length > 0) {
+      const processedData = await parseFinancialFile(file)
+      console.log(`Archivo procesado: ${processedData.transactions.length} transacciones`)
+
+      financialStore.addFinancialData(processedData)
+
+      if (processedData.transactions.length > 0) {
         toast.success(`Archivo procesado: ${displayName}`, {
-          description: `${aggregatedMetrics.length} métricas agregadas`
+          description: `${processedData.transactions.length} transacciones procesadas`
         })
       }
-      
-      return aggregatedMetrics.length
+
+      return processedData.transactions.length
     } catch (error) {
       console.error("Error processing file:", error)
       const displayName = fileName || file.name
@@ -71,7 +61,7 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
           const blob = new Blob([fileContent], { type: 'application/json' })
           const jsonFile = new File([blob], fileName, { type: 'application/json' })
           
-          const processed = await processJSONFile(jsonFile, fileName)
+          const processed = await processFile(jsonFile, fileName)
           totalProcessed += processed
         } catch (error) {
           console.error(`Error procesando ${fileName} del ZIP:`, error)
@@ -140,7 +130,7 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
             try {
               console.log(`Procesando archivo JSON: ${entryPath}`)
               const file = await readFile(entry as FileSystemFileEntry)
-              const processed = await processJSONFile(file, entryPath)
+              const processed = await processFile(file, entryPath)
               totalProcessed += processed
             } catch (error) {
               console.error(`Error procesando ${entryPath}:`, error)
@@ -219,11 +209,8 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
           const file = item.getAsFile()
           if (!file) continue
           
-          if (file.name.endsWith('.zip')) {
-            await processZipFile(file)
-            hasProcessedItems = true
-          } else if (file.name.endsWith('.json')) {
-            await processJSONFile(file)
+          if (file.name.endsWith('.zip') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+            await processFile(file)
             hasProcessedItems = true
           }
         }
@@ -232,10 +219,8 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
       if (!hasProcessedItems) {
         const files = Array.from(e.dataTransfer.files)
         for (const file of files) {
-          if (file.name.endsWith('.zip')) {
-            await processZipFile(file)
-          } else if (file.name.endsWith('.json')) {
-            await processJSONFile(file)
+          if (file.name.endsWith('.zip') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+            await processFile(file)
           }
         }
       }
@@ -254,10 +239,8 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
     try {
       const files = Array.from(e.currentTarget.files || [])
       for (const file of files) {
-        if (file.name.endsWith('.zip')) {
-          await processZipFile(file)
-        } else if (file.name.endsWith('.json')) {
-          await processJSONFile(file)
+        if (file.name.endsWith('.zip') || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+          await processFile(file)
         }
       }
     } finally {
@@ -342,7 +325,7 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
               ) : (
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <Upload className="w-4 h-4" />
-                  <span>Arrastra archivos JSON, ZIP o carpetas aquí, o usa los botones</span>
+                  <span>Arrastra archivos CSV, JSON, ZIP o carpetas aquí, o usa los botones</span>
                 </div>
               )}
             </div>
@@ -363,6 +346,10 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
           {/* File Type Indicators */}
           <div className="px-4 pb-3">
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                <span>CSV</span>
+              </div>
               <div className="flex items-center gap-1">
                 <FileText className="w-3 h-3" />
                 <span>JSON</span>

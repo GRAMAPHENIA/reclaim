@@ -51,155 +51,36 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
     }
   }
 
-  const processDirectory = async (dirEntry: FileSystemDirectoryEntry, path: string = '') => {
-    try {
-      const currentPath = path ? `${path}/${dirEntry.name}` : dirEntry.name
-      console.log(`Procesando carpeta: ${currentPath}`)
-      let totalProcessed = 0
-
-      const readDirectory = (entry: FileSystemDirectoryEntry): Promise<FileSystemEntry[]> => {
-        return new Promise((resolve, reject) => {
-          const reader = entry.createReader()
-
-          // Read all entries (some browsers require multiple calls)
-          const allEntries: FileSystemEntry[] = []
-
-          const readBatch = () => {
-            reader.readEntries((entries) => {
-              if (entries.length === 0) {
-                // No more entries
-                resolve(allEntries)
-              } else {
-                allEntries.push(...entries)
-                readBatch() // Read next batch
-              }
-            }, reject)
-          }
-
-          readBatch()
-        })
-      }
-
-      const readFile = (fileEntry: FileSystemFileEntry): Promise<File> => {
-        return new Promise((resolve, reject) => {
-          fileEntry.file(resolve, reject)
-        })
-      }
-
-      const processEntries = async (entries: FileSystemEntry[], currentPath: string) => {
-        console.log(`Encontradas ${entries.length} entradas en ${currentPath}`)
-
-        for (const entry of entries) {
-          const entryPath = `${currentPath}/${entry.name}`
-
-          if (entry.isFile && (entry.name.toLowerCase().endsWith('.csv') || entry.name.toLowerCase().endsWith('.json') || entry.name.toLowerCase().endsWith('.zip'))) {
-            try {
-              console.log(`Procesando archivo financiero: ${entryPath}`)
-              const file = await readFile(entry as FileSystemFileEntry)
-              const processed = await processFinancialFile(file)
-              totalProcessed += processed
-            } catch (error) {
-              console.error(`Error procesando ${entryPath}:`, error)
-            }
-          } else if (entry.isDirectory) {
-            try {
-              console.log(`Entrando en subcarpeta: ${entryPath}`)
-              // Recursively process subdirectories
-              const subEntries = await readDirectory(entry as FileSystemDirectoryEntry)
-              const subProcessed = await processEntries(subEntries, entryPath)
-              totalProcessed += subProcessed
-            } catch (error) {
-              console.error(`Error procesando subcarpeta ${entryPath}:`, error)
-            }
-          } else if (entry.isFile) {
-            console.log(`Archivo ignorado (no soportado): ${entryPath}`)
-          }
-        }
-
-        return totalProcessed
-      }
-
-      const entries = await readDirectory(dirEntry)
-      const processed = await processEntries(entries, currentPath)
-
-      onFilesProcessed?.(processed)
-      console.log(`Carpeta ${currentPath} procesada: ${processed} transacciones totales`)
-
-      if (processed > 0) {
-        toast.success(`Carpeta procesada exitosamente`, {
-          description: `${processed} transacciones agregadas desde ${currentPath}`
-        })
-      } else {
-        toast.warning(`Carpeta procesada pero sin datos`, {
-          description: `No se encontraron archivos CSV, JSON o ZIP válidos en ${currentPath}`
-        })
-      }
-    } catch (error) {
-      console.error("Error processing directory:", error)
-      toast.error(`Error procesando carpeta ${dirEntry.name}`, {
-        description: error instanceof Error ? error.message : "Error desconocido"
-      })
-    }
-  }
-
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
     setIsProcessing(true)
 
     try {
-      const items = Array.from(e.dataTransfer.items)
-      console.log(`Elementos arrastrados: ${items.length}`)
+      const files = Array.from(e.dataTransfer.files)
+      console.log(`Archivos arrastrados: ${files.length}`)
 
-      let hasProcessedItems = false
+      let totalProcessed = 0
 
-      for (const item of items) {
-        console.log(`Procesando item: kind=${item.kind}, type=${item.type}`)
+      for (const file of files) {
+        console.log(`Procesando archivo: ${file.name}, tipo: ${file.type}, tamaño: ${file.size}`)
 
-        if (item.kind === 'file') {
-          // Check if it's a directory using webkitGetAsEntry
-          if (item.webkitGetAsEntry) {
-            const entry = item.webkitGetAsEntry()
-            console.log(`Entry: ${entry?.name}, isDirectory: ${entry?.isDirectory}, isFile: ${entry?.isFile}`)
-
-            if (entry?.isDirectory) {
-              console.log(`Procesando carpeta: ${entry.name}`)
-              await processDirectory(entry as FileSystemDirectoryEntry)
-              hasProcessedItems = true
-              continue
-            }
-          }
-
-          // Handle regular files
-          const file = item.getAsFile()
-          if (!file) continue
-
-          console.log(`Procesando archivo: ${file.name}`)
-
-          if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
-            await processFinancialFile(file)
-            hasProcessedItems = true
-          } else {
-            toast.warning(`Archivo no soportado: ${file.name}`, {
-              description: "Solo se aceptan archivos CSV, JSON y ZIP de MercadoPago"
-            })
-          }
+        if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
+          const processed = await processFinancialFile(file)
+          totalProcessed += processed
+        } else {
+          toast.warning(`Archivo no soportado: ${file.name}`, {
+            description: "Solo se aceptan archivos CSV, JSON y ZIP de MercadoPago"
+          })
         }
       }
 
-      // Fallback for browsers that don't support webkitGetAsEntry or if no items were processed
-      if (!hasProcessedItems) {
-        console.log('Usando fallback con dataTransfer.files')
-        const files = Array.from(e.dataTransfer.files)
-        console.log(`Archivos en fallback: ${files.length}`)
+      onFilesProcessed?.(totalProcessed)
 
-        for (const file of files) {
-          console.log(`Procesando archivo fallback: ${file.name}, size: ${file.size}`)
-
-          if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
-            await processFinancialFile(file)
-          }
-        }
+      if (totalProcessed > 0) {
+        toast.success(`Importación completada`, {
+          description: `Se procesaron ${totalProcessed} transacciones en total`
+        })
       }
     } catch (error) {
       console.error('Error en handleDrop:', error)
@@ -227,55 +108,6 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
       }
 
       onFilesProcessed?.(totalProcessed)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleDirectoryInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsProcessing(true)
-    try {
-      const files = Array.from(e.currentTarget.files || [])
-      let totalProcessed = 0
-
-      // Group files by their webkitRelativePath to reconstruct directory structure
-      const filesByPath: Record<string, File[]> = {}
-
-      for (const file of files) {
-        if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.zip')) {
-          const path = (file as any).webkitRelativePath || file.name
-          const dirPath = path.substring(0, path.lastIndexOf('/'))
-
-          if (!filesByPath[dirPath]) {
-            filesByPath[dirPath] = []
-          }
-          filesByPath[dirPath].push(file)
-        }
-      }
-
-      // Process files from each directory
-      for (const [dirPath, dirFiles] of Object.entries(filesByPath)) {
-        console.log(`Procesando carpeta: ${dirPath} (${dirFiles.length} archivos)`)
-
-        for (const file of dirFiles) {
-          const processed = await processFinancialFile(file)
-          totalProcessed += processed
-        }
-
-        if (dirFiles.length > 0) {
-          toast.success(`Carpeta procesada: ${dirPath}`, {
-            description: `${dirFiles.length} archivos procesados`
-          })
-        }
-      }
-
-      onFilesProcessed?.(totalProcessed)
-
-      if (totalProcessed > 0) {
-        toast.success(`Importación completada`, {
-          description: `Se procesaron ${totalProcessed} transacciones en total`
-        })
-      }
     } finally {
       setIsProcessing(false)
     }
@@ -337,21 +169,6 @@ export function FinancialDropZone({ onFilesProcessed }: FinancialDropZoneProps) 
             />
             <span className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50">
               {isProcessing ? "Procesando..." : "Seleccionar archivos"}
-            </span>
-          </label>
-
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              // @ts-ignore - webkitdirectory is not in TypeScript types but is supported
-              webkitdirectory=""
-              multiple
-              onChange={handleDirectoryInput}
-              disabled={isProcessing}
-              className="hidden"
-            />
-            <span className="inline-block px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors disabled:opacity-50">
-              {isProcessing ? "Procesando..." : "Seleccionar carpeta"}
             </span>
           </label>
         </div>

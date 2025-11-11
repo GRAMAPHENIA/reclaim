@@ -7,6 +7,8 @@ import { FinancialDropZone } from "@/components/financial-drop-zone"
 import { FinancialCards } from "@/components/financial-cards"
 import { FinancialChart } from "@/components/financial-chart"
 import { FinancialInsights } from "@/components/financial-insights"
+import { FloatingImportBar } from "@/components/floating-import-bar"
+import { Footer } from "@/components/footer"
 import { financialStore } from "@/lib/financial-store"
 import { generateFinancialForecast } from "@/lib/financial-analytics"
 import type { FinancialTransaction } from "@/lib/financial-data-parser"
@@ -148,7 +150,7 @@ export default function FinancialDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 ${transactions.length > 0 ? 'pb-40' : 'pb-32'}`}>
+      <main className={`flex-1 ${transactions.length > 0 ? 'pb-48' : 'pb-32'}`}>
         <div className="max-w-7xl mx-auto px-6 py-8">
           {transactions.length === 0 ? (
             <div className="space-y-6">
@@ -354,12 +356,11 @@ export default function FinancialDashboard() {
         </div>
       </main>
 
+      {/* Floating Import Bar */}
+      <FloatingImportBar />
+
       {/* Footer */}
-      <footer className="border-t border-border bg-card px-6 py-4">
-        <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-          <p>Reclaim v1.0.0 - Tu dinero, tus datos, tu control</p>
-        </div>
-      </footer>
+      <Footer hasFloatingBar={true} />
 
       {/* Confirm Dialog */}
       {showConfirmDialog && (
