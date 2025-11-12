@@ -82,18 +82,18 @@ export function FinancialCards({ transactions }: FinancialCardsProps) {
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {cards.map((card) => {
         const IconComponent = card.icon
         return (
-          <div key={card.title} className={`p-6 ${card.color} rounded-lg`}>
-            <div className="flex items-start justify-between mb-4">
+          <div key={card.title} className={`p-4 sm:p-6 ${card.color} rounded-lg`}>
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">{card.title}</p>
               </div>
-              <IconComponent className={`w-5 h-5 ${card.iconColor}`} />
+              <IconComponent className={`w-4 h-4 sm:w-5 sm:h-5 ${card.iconColor}`} />
             </div>
-            <p className="text-2xl font-bold">{card.format(card.value)}</p>
+            <p className="text-xl sm:text-2xl font-bold">{card.format(card.value)}</p>
             {card.unit && card.title !== "Categoría Principal" && (
               <p className="text-xs text-muted-foreground mt-1">{card.unit}</p>
             )}

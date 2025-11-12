@@ -79,22 +79,25 @@ REPORTADO POR: Usuario de Reclaim
   }
 
   if (hasFloatingBar) {
-    // When there's a floating bar, show footer on the right side
+    // Desktop: footer on the right side
+    // Mobile: footer below the floating bar
     return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <div className="bg-card border border-border px-3 py-2 shadow-sm flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Reclaim v2.0.0</span>
-          {mounted && (
-            <Dialog open={isBugReportOpen} onOpenChange={setIsBugReportOpen}>
-              <DialogTrigger asChild>
-                <button
-                  className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  title="Reportar un bug"
-                  onClick={() => console.log('Bug button clicked')}
-                >
-                  <Bug className="w-4 h-4" />
-                </button>
-              </DialogTrigger>
+      <>
+        {/* Desktop version - right side */}
+        <div className="hidden sm:block fixed bottom-4 right-4 z-50">
+          <div className="bg-card border border-border px-3 py-2 shadow-sm flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Reclaim v2.0.0</span>
+            {mounted && (
+              <Dialog open={isBugReportOpen} onOpenChange={setIsBugReportOpen}>
+                <DialogTrigger asChild>
+                  <button
+                    className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    title="Reportar un bug"
+                    onClick={() => console.log('Bug button clicked')}
+                  >
+                    <Bug className="w-4 h-4" />
+                  </button>
+                </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Reportar un Bug</DialogTitle>
@@ -176,6 +179,9 @@ REPORTADO POR: Usuario de Reclaim
           )}
         </div>
       </div>
+
+
+    </>
     )
   }
 

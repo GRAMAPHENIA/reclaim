@@ -2,6 +2,7 @@
 
 import { Upload, FileArchive, Folder, FileText, Paperclip, Plus, HelpCircle } from "lucide-react"
 import { useFileImport } from "@/hooks/useFileImport"
+import { MobileFooter } from "@/components/MobileFooter"
 import {
   Tooltip,
   TooltipContent,
@@ -67,9 +68,9 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
           )}
 
           {/* Main Input Area */}
-          <div className="flex items-center gap-3 p-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 sm:p-4">
             {/* Attachment Buttons */}
-            <div className="flex gap-1">
+            <div className="flex gap-1 justify-center sm:justify-start">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -119,16 +120,19 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
             </div>
 
             {/* Input Area */}
-            <div className="flex-1 min-h-[48px] flex items-center px-4 py-3 bg-muted/50 rounded">
+            <div className="flex-1 min-h-[48px] flex items-center px-3 sm:px-4 py-3 bg-muted/50 rounded">
               {isProcessing ? (
-                <div className="flex items-center gap-3 text-muted-foreground">
+                <div className="flex items-center gap-2 sm:gap-3 text-muted-foreground text-xs sm:text-sm">
                   <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <span>Procesando archivos...</span>
+                  <span className="hidden sm:inline">Procesando archivos...</span>
+                  <span className="sm:hidden">Procesando...</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <Upload className="w-4 h-4" />
-                  <span>Arrastra archivos CSV, JSON, ZIP o carpetas aquí, o usa los botones</span>
+                <div className="flex items-center gap-2 sm:gap-3 text-muted-foreground text-xs sm:text-sm">
+                  <Upload className="w-4 h-4 shrink-0" />
+                  <span className="hidden md:inline">Arrastra archivos CSV, JSON, ZIP o carpetas aquí, o usa los botones</span>
+                  <span className="hidden sm:inline md:hidden">Arrastra archivos o usa los botones</span>
+                  <span className="sm:hidden">Arrastra o selecciona archivos</span>
                 </div>
               )}
             </div>
@@ -148,9 +152,9 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
           </div>
 
           {/* File Type Indicators with Help */}
-          <div className="px-4 pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="px-3 sm:px-4 pb-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 text-xs text-muted-foreground flex-wrap justify-center sm:justify-start">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -246,6 +250,9 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
             </div>
           </div>
         </div>
+
+        {/* Footer integrado para mobile - aparece debajo de la barra */}
+        <MobileFooter />
       </div>
     </div>
   )

@@ -95,10 +95,10 @@ export function YieldsModal({ isOpen, onClose }: YieldsModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-card/95 backdrop-blur-md border border-border rounded-lg max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-card/95 backdrop-blur-md border border-border rounded-lg max-w-5xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
           <div className="flex items-center gap-3">
             <TrendingUp className="w-6 h-6 text-green-500" />
             <div>
@@ -119,7 +119,7 @@ export function YieldsModal({ isOpen, onClose }: YieldsModalProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {yields.length === 0 ? (
             <div className="text-center py-12">
               <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
