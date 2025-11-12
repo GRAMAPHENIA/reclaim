@@ -8,6 +8,7 @@ import type { YieldEntry } from "@/lib/yields-data-parser"
 import { toast } from "sonner"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { usePagination } from "@/hooks/usePagination"
+import { useModalScrollLock } from "@/hooks/useModalScrollLock"
 
 interface YieldsModalProps {
   isOpen: boolean
@@ -27,51 +28,7 @@ export function YieldsModal({ isOpen, onClose }: YieldsModalProps) {
   }, [])
 
   // Bloquear scroll del body cuando el modal está abierto
-  useEffect(() => {
-    if (isOpen) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-      
-      // Bloquear scroll y agregar padding
-      document.body.style.overflow = 'hidden'
-      document.body.style.paddingRight = `${scrollbarWidth}px`
-      
-      // Aplicar padding a elementos fixed
-      const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.paddingRight = `${scrollbarWidth}px`
-        }
-      })
-    } else {
-      // Delay para esperar la animación de cierre del modal
-      const timeoutId = setTimeout(() => {
-        document.body.style.overflow = 'unset'
-        document.body.style.paddingRight = '0px'
-        
-        // Remover padding de elementos fixed
-        const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
-        fixedElements.forEach((el) => {
-          if (el instanceof HTMLElement) {
-            el.style.paddingRight = '0px'
-          }
-        })
-      }, 200)
-      
-      return () => clearTimeout(timeoutId)
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset'
-      document.body.style.paddingRight = '0px'
-      
-      const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.paddingRight = '0px'
-        }
-      })
-    }
-  }, [isOpen])
+  useModalScrollLock(isOpen)
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

@@ -122,6 +122,16 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Prevenir layout shift cuando se bloquea el scroll */
+  body.modal-open {
+    overflow: hidden;
+    padding-right: var(--scrollbar-width, 0px);
+  }
+  
+  body.modal-open .fixed {
+    padding-right: var(--scrollbar-width, 0px);
+  }
 
   /* Scrollbar personalizado para modo light y dark */
   * {

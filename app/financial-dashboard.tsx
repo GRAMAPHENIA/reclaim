@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/EmptyState"
 import { FinancialCards } from "@/components/financial-cards"
@@ -28,6 +28,7 @@ import {
 import { useFinancialData } from "@/hooks/useFinancialData"
 import { useFilters } from "@/hooks/useFilters"
 import { usePagination } from "@/hooks/usePagination"
+import { useModalScrollLock } from "@/hooks/useModalScrollLock"
 import { FinancialDataService } from "@/lib/services/financial-data.service"
 import { ExportService } from "@/lib/services/export.service"
 
@@ -39,6 +40,9 @@ export default function FinancialDashboard() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showBillingModal, setShowBillingModal] = useState(false)
   const [showYieldsModal, setShowYieldsModal] = useState(false)
+
+  // Bloquear scroll cuando el AlertDialog está abierto
+  useModalScrollLock(showConfirmDialog)
 
   // Hooks personalizados
   const { transactions, insights, categories } = useFinancialData()

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { useModalScrollLock } from "@/hooks/useModalScrollLock"
 
 interface FooterProps {
   hasFloatingBar?: boolean
@@ -29,51 +30,7 @@ export function Footer({ hasFloatingBar = false }: FooterProps) {
   }, [])
 
   // Bloquear scroll del body cuando el modal está abierto
-  useEffect(() => {
-    if (isBugReportOpen) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-      
-      // Bloquear scroll y agregar padding
-      document.body.style.overflow = 'hidden'
-      document.body.style.paddingRight = `${scrollbarWidth}px`
-      
-      // Aplicar padding a elementos fixed
-      const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.paddingRight = `${scrollbarWidth}px`
-        }
-      })
-    } else {
-      // Delay para esperar la animación de cierre del modal
-      const timeoutId = setTimeout(() => {
-        document.body.style.overflow = 'unset'
-        document.body.style.paddingRight = '0px'
-        
-        // Remover padding de elementos fixed
-        const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
-        fixedElements.forEach((el) => {
-          if (el instanceof HTMLElement) {
-            el.style.paddingRight = '0px'
-          }
-        })
-      }, 200)
-      
-      return () => clearTimeout(timeoutId)
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset'
-      document.body.style.paddingRight = '0px'
-      
-      const fixedElements = document.querySelectorAll('[style*="position: fixed"], .fixed')
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.style.paddingRight = '0px'
-        }
-      })
-    }
-  }, [isBugReportOpen])
+  useModalScrollLock(isBugReportOpen)
 
   const handleBugReportSubmit = (e: React.FormEvent) => {
     e.preventDefault()
