@@ -38,10 +38,10 @@ export function EmptyState() {
         <span>Usa la barra de importación inferior</span>
       </div>
 
-      {/* Indicador simplificado para mobile */}
+      {/* Botón de importación para mobile */}
       <div className="flex sm:hidden items-center gap-2 text-xs text-muted-foreground">
         <ArrowDown className="w-3 h-3 animate-bounce" />
-        <span>Importa abajo</span>
+        <span>Toca "Importar" abajo</span>
       </div>
     </div>
   )

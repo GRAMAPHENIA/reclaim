@@ -73,13 +73,13 @@ REPORTADO POR: Usuario de Reclaim
   }
 
   return (
-    <div className="sm:hidden bg-card border border-border border-t-0 px-3 py-2 rounded-b-lg flex items-center justify-center gap-2">
-      <span className="text-xs text-muted-foreground">Reclaim v2.0.0</span>
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-muted-foreground">v2.0.0</span>
       {mounted && (
         <Dialog open={isBugReportOpen} onOpenChange={setIsBugReportOpen}>
           <DialogTrigger asChild>
             <button
-              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
               title="Reportar un bug"
             >
               <Bug className="w-4 h-4" />

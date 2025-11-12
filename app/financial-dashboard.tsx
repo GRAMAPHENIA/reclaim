@@ -88,7 +88,7 @@ export default function FinancialDashboard() {
       <DashboardHeader />
 
       {/* Main Content */}
-      <main className={`flex-1 ${transactions.length > 0 ? 'pb-56 sm:pb-48' : ''}`}>
+      <main className={`flex-1 ${transactions.length > 0 ? 'pb-20 sm:pb-48' : ''}`}>
         {transactions.length === 0 ? (
           <EmptyState />
         ) : (

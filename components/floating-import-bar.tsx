@@ -34,18 +34,20 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
   } = useFileImport(onFilesProcessed)
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40">
-      <div className="max-w-4xl mx-auto p-4">
-        <div 
-          className={`relative border transition-all ${
-            isDragging 
-              ? "border-primary bg-primary/10 shadow-xl ring-2 ring-primary/20" 
-              : "border-border bg-card shadow-sm hover:shadow-md"
-          }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
+    <>
+      {/* Desktop version - full drag and drop */}
+      <div className="hidden sm:block fixed bottom-0 left-0 right-0 z-40">
+        <div className="max-w-4xl mx-auto p-4">
+          <div 
+            className={`relative border transition-all ${
+              isDragging 
+                ? "border-primary bg-primary/10 shadow-xl ring-2 ring-primary/20" 
+                : "border-border bg-card shadow-sm hover:shadow-md"
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
           {/* Glassmorphism Overlay for Drag State */}
           {isDragging && (
             <div className="absolute inset-0 bg-white/70 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center z-10">
@@ -250,10 +252,41 @@ export function FloatingImportBar({ onFilesProcessed }: FloatingImportBarProps) 
             </div>
           </div>
         </div>
-
-        {/* Footer integrado para mobile - aparece debajo de la barra */}
-        <MobileFooter />
       </div>
     </div>
+
+    {/* Mobile version - compact button bar */}
+    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40">
+      <div className="bg-card border-t border-border shadow-lg">
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Import button */}
+          <label className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg cursor-pointer active:scale-95 transition-transform">
+            <input
+              type="file"
+              multiple
+              accept=".csv,.json,.zip"
+              onChange={handleFileInput}
+              disabled={isProcessing}
+              className="hidden"
+            />
+            {isProcessing ? (
+              <>
+                <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                <span className="text-sm font-medium">Procesando...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" />
+                <span className="text-sm font-medium">Importar</span>
+              </>
+            )}
+          </label>
+
+          {/* Footer info */}
+          <MobileFooter />
+        </div>
+      </div>
+    </div>
+  </>
   )
 }
